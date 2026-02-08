@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmic Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
+        .container { width: 90%; max-width: 800px; margin-top: 50px; }
+        .card { background: #1e293b; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #38bdf8; }
+        .input-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        input { padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #334155; color: white; width: 60%; }
+        button { padding: 10px 20px; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0ea5e9; }
+        .stats { display: flex; justify-content: space-between; margin-bottom: 20px; background: #334155; padding: 15px; border-radius: 8px; }
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 0.8rem; color: #94a3b8; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; }
+        #signalVal { color: #facc15; } /* Default Yellow */
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h1>Stock Predictor</h1>
+        <div class="input-group">
+            <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g., AAPL, BTC-USD, SPY)" value="AAPL">
+            <button onclick="getPrediction()">Analyze</button>
+        </div>
+
+        <div class="stats" id="statsBox" style="display: none;">
+            <div class="stat-box">
+                <div class="stat-label">Current Price</div>
+                <div class="stat-val" id="priceVal">--</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">RSI (14)</div>
+                <div class="stat-val" id="rsiVal">--</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Algo Signal</div>
+                <div class="stat-val" id="signalVal">--</div>
+            </div>
+        </div>
+
+        <canvas id="priceChart"></canvas>
+    </div>
+</div>
+
+<script>
+    let chartInstance = null;
+
+    async function getPrediction() {
+        const ticker = document.getElementById('tickerInput').value;
+        const btn = document.querySelector('button');
+        btn.innerText = "Analyzing...";
+        
+        try {
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ticker: ticker })
+            });
+            const data = await response.json();
+            
+            if (data.error) { alert(data.error); return; }
+
+            // Update UI
+            document.getElementById('statsBox').style.display = 'flex';
+            document.getElementById('priceVal').innerText = '$' + data.current_price;
+            document.getElementById('rsiVal').innerText = data.rsi;
+            
+            const sig = document.getElementById('signalVal');
+            sig.innerText = data.signal;
+            sig.style.color = data.signal.includes('BUY') ? '#4ade80' : (data.signal.includes('SELL') ? '#f87171' : '#facc15');
+
+            renderChart(data);
+        } catch (error) {
+            console.error(error);
+            alert("Failed to fetch data.");
+        } finally {
+            btn.innerText = "Analyze";
+        }
+    }
+
+    function renderChart(data) {
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [
+                    {
+                        label: 'Price',
+                        data: data.prices,
+                        borderColor: '#38bdf8',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Lower Bollinger Band (Buy Zone)',
+                        data: data.lower_band_data,
+                        borderColor: '#4ade80',
+                        borderDash: [5, 5],
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: { intersect: false, mode: 'index' },
+                scales: { x: { display: false }, y: { grid: { color: '#334155' } } }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
