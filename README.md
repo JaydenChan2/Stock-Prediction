@@ -11,12 +11,12 @@ A Flask-based web application that performs technical analysis on real-time stoc
 * Projects potential profit percentages and target prices based on volatility.
 
 
-* **Market Scanner (Trending):**
+## **Market Scanner (Trending):**
 * Automatically scans a pre-defined list of popular stocks and ETFs (e.g., AAPL, SPY, NVDA).
 * Filters and returns only assets currently showing "BUY" signals.
 
 
-* **Portfolio Comparison & Optimization:**
+## **Portfolio Comparison & Optimization:**
 * Compares a custom list of user-selected stocks.
 * Calculates a proprietary "Attractiveness Score" (0-100) for each asset.
 * **Smart Allocation:** Distributes a user's specific budget (e.g., $1,000) across the selected stocks based on their technical strength.
