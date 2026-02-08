@@ -29,6 +29,8 @@ A Flask-based web application that performs technical analysis on real-time stoc
 * **Data Source:** Yahoo Finance (`yfinance`)
 * **Data Processing:** Pandas, NumPy
 
+<img width="1877" height="982" alt="image" src="https://github.com/user-attachments/assets/23a57f8d-457e-4712-8cc0-ff3e30b9e937" />
+
 ## 📦 Installation
 
 1. **Clone the repository:**
