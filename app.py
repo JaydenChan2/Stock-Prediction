@@ -5,7 +5,6 @@ import numpy as np
 
 app = Flask(__name__)
 
-
 def calculate_technical_signals(ticker):
     # Gathering relevant data for the past year
     try:
