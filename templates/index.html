@@ -1,124 +1,550 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Algorithmic Predictor</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; }
-        .container { width: 90%; max-width: 800px; margin-top: 50px; }
-        .card { background: #1e293b; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        h1 { text-align: center; color: #38bdf8; }
-        .input-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
-        input { padding: 10px; border-radius: 6px; border: 1px solid #475569; background: #334155; color: white; width: 60%; }
-        button { padding: 10px 20px; background: #38bdf8; color: #0f172a; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0ea5e9; }
-        .stats { display: flex; justify-content: space-between; margin-bottom: 20px; background: #334155; padding: 15px; border-radius: 8px; }
-        .stat-box { text-align: center; }
-        .stat-label { font-size: 0.8rem; color: #94a3b8; }
-        .stat-val { font-size: 1.2rem; font-weight: bold; }
-        #signalVal { color: #facc15; } /* Default Yellow */
+        /* Modern Minimalist Theme (Slate/Zinc) */
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --accent: #0f172a;
+            --border: #e2e8f0;
+            --buy: #10b981;
+            --strong-buy: #059669;
+            --sell: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* 3-Column Layout */
+        .app-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 95%;
+            max-width: 1600px;
+            margin: 40px auto;
+        }
+
+        @media (min-width: 1200px) {
+            .app-layout {
+                display: grid;
+                grid-template-columns: 350px 1fr 350px;
+                align-items: start;
+                gap: 20px;
+            }
+        }
+
+        .sidebar-panel {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--border);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 2rem;
+            letter-spacing: -0.025em;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        input {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #f1f5f9;
+            color: var(--text-main);
+            width: 60%;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: white;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+        }
+
+        .stat-val {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .trending-title {
+            font-size: 1.1rem;
+            color: var(--text-main);
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .trending-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .trending-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .trending-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent);
+        }
+
+        .t-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .t-ticker {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+        .t-type {
+            font-size: 0.7rem;
+            background: #e2e8f0;
+            color: var(--text-muted);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .t-name {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .t-price {
+            font-size: 1rem;
+            color: var(--text-main);
+            font-weight: 600;
+            margin-top: auto;
+        }
+
+        .t-signal {
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .signal-buy {
+            color: var(--buy);
+        }
+
+        .signal-strong {
+            color: var(--strong-buy);
+        }
+
+        /* Portfolio Section Styles */
+        .portfolio-section {
+            width: 100%;
+        }
+
+        .p-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+        }
+
+        .p-table th {
+            background: #f1f5f9;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .p-table td {
+            padding: 12px 8px;
+            /* Slightly tighter padding for sidebar */
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .p-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .p-table tr:hover td {
+            background: #f8fafc;
+        }
     </style>
 </head>
+
 <body>
 
-    
-<div class="container">
-    <div class="card">
-        <h1>Stock Predictor</h1>
-        <div class="input-group">
-            <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g., AAPL, BTC-USD, SPY)" value="AAPL">
-            <button onclick="getPrediction()">Analyze</button>
+    <div class="app-layout">
+
+        <!-- LEFT COLUMN: Portfolio -->
+        <div class="sidebar-panel">
+            <div class="portfolio-section">
+                <div class="trending-title">Portfolio Allocator</div>
+                <div style="text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 15px;">
+                    Compare tickers & optimize budget.
+                </div>
+                <div class="p-input-group" style="display: flex; flex-direction: column; gap: 10px;">
+                    <input type="text" id="pTickers" placeholder="Tickers (e.g. AAPL, TSLA)" value="AAPL, TSLA, AMZN"
+                        style="width: 100%; box-sizing: border-box;">
+                    <input type="number" id="pBudget" placeholder="Budget ($)" value="1000"
+                        style="width: 100%; box-sizing: border-box;">
+                    <button onclick="optimizePortfolio()" style="width: 100%;">Optimize</button>
+                </div>
+                <div id="portfolioResults" style="display: none; margin-top: 20px;">
+                    <table class="p-table" style="font-size: 0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Alloc %</th>
+                                <th>Amt ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolioBody">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
-        <div class="stats" id="statsBox" style="display: none;">
-            <div class="stat-box">
-                <div class="stat-label">Current Price</div>
-                <div class="stat-val" id="priceVal">--</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">RSI (14)</div>
-                <div class="stat-val" id="rsiVal">--</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Algo Signal</div>
-                <div class="stat-val" id="signalVal">--</div>
+        <!-- CENTER COLUMN: Predictor -->
+        <div class="main-content">
+            <div class="card">
+                <h1>Stock Predictor</h1>
+                <h2 id="companyName"
+                    style="text-align: center; color: var(--text-muted); font-weight: 500; font-size: 1.2rem; margin-top: -1.5rem; margin-bottom: 2rem; display: none;">
+                    --</h2>
+                <div class="input-group">
+                    <input type="text" id="tickerInput" placeholder="Enter Ticker (e.g., AAPL, BTC-USD, SPY)"
+                        value="AAPL">
+                    <button onclick="getPrediction()">Analyze</button>
+                </div>
+
+                <div class="stats" id="statsBox" style="display: none;">
+                    <div class="stat-box">
+                        <div class="stat-label">Current Price</div>
+                        <div class="stat-val" id="priceVal">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">RSI (14)</div>
+                        <div class="stat-val" id="rsiVal">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Algo Signal</div>
+                        <div class="stat-val" id="signalVal">--</div>
+                    </div>
+                </div>
+
+                <!-- Projections Section -->
+                <div class="stats" id="projectionsBox"
+                    style="display: none; background: #f0fdf4; border-color: #bbf7d0;">
+                    <div class="stat-box">
+                        <div class="stat-label">Target Price</div>
+                        <div class="stat-val" id="targetPriceVal" style="color: #15803d;">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Potential Profit</div>
+                        <div class="stat-val" id="profitVal" style="color: #15803d;">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Holding Period</div>
+                        <div class="stat-val" id="holdingVal" style="color: #15803d; font-size: 1.2rem;">--</div>
+                    </div>
+                </div>
+
+                <canvas id="priceChart"></canvas>
             </div>
         </div>
 
-        <canvas id="priceChart"></canvas>
+        <!-- RIGHT COLUMN: Trending -->
+        <div class="sidebar-panel">
+            <div class="trending-container">
+                <div class="trending-title">Trending Buys</div>
+                <div class="trending-grid" id="trendingGrid" style="grid-template-columns: 1fr;">
+                    <div style="color: #94a3b8; font-size: 0.9rem;">Loading trending stocks...</div>
+                </div>
+            </div>
+        </div>
+
     </div>
-</div>
 
-<script>
-    let chartInstance = null;
+    <script>
+        let chartInstance = null;
 
-    async function getPrediction() {
-        const ticker = document.getElementById('tickerInput').value;
-        const btn = document.querySelector('button');
-        btn.innerText = "Analyzing...";
-        
-        try {
-            const response = await fetch('/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ticker: ticker })
-            });
-            const data = await response.json();
-            
-            if (data.error) { alert(data.error); return; }
+        async function getPrediction() {
+            const ticker = document.getElementById('tickerInput').value;
+            const btn = document.querySelector('button');
+            btn.innerText = "Analyzing...";
 
-            // Update UI
-            document.getElementById('statsBox').style.display = 'flex';
-            document.getElementById('priceVal').innerText = '$' + data.current_price;
-            document.getElementById('rsiVal').innerText = data.rsi;
-            
-            const sig = document.getElementById('signalVal');
-            sig.innerText = data.signal;
-            sig.style.color = data.signal.includes('BUY') ? '#4ade80' : (data.signal.includes('SELL') ? '#f87171' : '#facc15');
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker: ticker })
+                });
+                const data = await response.json();
 
-            renderChart(data);
-        } catch (error) {
-            console.error(error);
-            alert("Failed to fetch data.");
-        } finally {
-            btn.innerText = "Analyze";
-        }
-    }
+                if (data.error) { alert(data.error); return; }
 
-    function renderChart(data) {
-        const ctx = document.getElementById('priceChart').getContext('2d');
-        if (chartInstance) chartInstance.destroy();
+                // Update UI
+                const nameEl = document.getElementById('companyName');
+                nameEl.innerText = data.company_name;
+                nameEl.style.display = 'block';
 
-        chartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.dates,
-                datasets: [
-                    {
-                        label: 'Price',
-                        data: data.prices,
-                        borderColor: '#38bdf8',
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Lower Bollinger Band (Buy Zone)',
-                        data: data.lower_band_data,
-                        borderColor: '#4ade80',
-                        borderDash: [5, 5],
-                        pointRadius: 0
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                interaction: { intersect: false, mode: 'index' },
-                scales: { x: { display: false }, y: { grid: { color: '#334155' } } }
+                document.getElementById('statsBox').style.display = 'flex';
+                document.getElementById('priceVal').innerText = '$' + data.current_price;
+                document.getElementById('rsiVal').innerText = data.rsi;
+
+                const sig = document.getElementById('signalVal');
+                sig.innerText = data.signal;
+                sig.style.color = data.signal.includes('BUY') ? 'var(--buy)' : (data.signal.includes('SELL') ? 'var(--sell)' : '#facc15');
+
+                // Update Projections
+                document.getElementById('projectionsBox').style.display = 'flex';
+                document.getElementById('targetPriceVal').innerText = '$' + data.target_price;
+                document.getElementById('profitVal').innerText = data.potential_profit + '%';
+                document.getElementById('holdingVal').innerText = data.holding_period;
+
+                renderChart(data);
+            } catch (error) {
+                console.error(error);
+                alert("Failed to fetch data.");
+            } finally {
+                btn.innerText = "Analyze";
             }
-        });
-    }
-</script>
+        }
+
+        function renderChart(data) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [
+                        {
+                            label: 'Price',
+                            data: data.prices,
+                            borderColor: '#38bdf8',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Lower Bollinger Band (Buy Zone)',
+                            data: data.lower_band_data,
+                            borderColor: '#4ade80',
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { intersect: false, mode: 'index' },
+                    scales: { x: { display: false }, y: { grid: { color: '#334155' } } }
+                }
+            });
+        }
+
+        async function loadTrending() {
+            const grid = document.getElementById('trendingGrid');
+            try {
+                const res = await fetch('/trending');
+                const data = await res.json();
+
+                grid.innerHTML = '';
+
+                if (data.length === 0) {
+                    grid.innerHTML = '<div style="color: #94a3b8;">No buy signals in popular stocks right now.</div>';
+                    return;
+                }
+
+                data.forEach(stock => {
+                    const card = document.createElement('div');
+                    card.className = 'trending-card';
+                    card.onclick = () => {
+                        document.getElementById('tickerInput').value = stock.ticker;
+                        getPrediction();
+                    };
+
+                    const signalClass = stock.signal === 'STRONG BUY' ? 'signal-strong' : 'signal-buy';
+
+                    card.innerHTML = `
+                        <div class="t-header">
+                            <span class="t-ticker">${stock.ticker}</span>
+                            <span class="t-type">${stock.type}</span>
+                        </div>
+                        <div class="t-name">${stock.name}</div>
+                        <div class="t-price">$${stock.price}</div>
+                        <div class="t-signal ${signalClass}">${stock.signal}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div style="color: #f87171;">Failed to load trending.</div>';
+            }
+        }
+
+        // Load trending on startup
+        window.onload = loadTrending;
+
+        async function optimizePortfolio() {
+            const tickersInput = document.getElementById('pTickers').value;
+            const budgetInput = document.getElementById('pBudget').value;
+            const btn = document.querySelectorAll('button')[1]; // Second button is optimize in new layout
+            const resultsDiv = document.getElementById('portfolioResults');
+            const tbody = document.getElementById('portfolioBody');
+
+            if (!tickersInput) {
+                alert("Please enter tickers.");
+                return;
+            }
+
+            btn.innerText = "Optimizing...";
+            resultsDiv.style.display = 'none';
+
+            try {
+                const res = await fetch('/compare', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tickers: tickersInput.split(','),
+                        budget: budgetInput
+                    })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                tbody.innerHTML = '';
+
+                data.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td style="font-weight: bold; color: #38bdf8;">${item.ticker}</td>
+                    <td style="color: #4ade80;">${item.allocation_pct}%</td>
+                    <td style="font-weight: bold;">$${item.allocation_amt}</td>
+                `;
+                    tbody.appendChild(tr);
+                });
+
+                resultsDiv.style.display = 'block';
+
+            } catch (e) {
+                console.error(e);
+                alert("Failed to optimize portfolio.");
+            } finally {
+                btn.innerText = "Optimize";
+            }
+        }
+    </script>
 
 </body>
+
 </html>
