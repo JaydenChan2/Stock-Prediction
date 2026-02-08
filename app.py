@@ -5,20 +5,18 @@ import numpy as np
 
 app = Flask(__name__)
 
-# --- THE ALGORITHM ---
+
 def calculate_technical_signals(ticker):
-    # 1. Fetch Data (1 Year of history to ensure valid Moving Averages)
+    # Gathering relevant data for the past year
     try:
         df = yf.download(ticker, period="1y", interval="1d", progress=False)
         if df.empty:
             return None
         
-        # Flatten MultiIndex columns if necessary (yfinance update fix)
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
 
-        # 2. Calculate Bollinger Bands
-        # Middle Band = 20 Day Simple Moving Average (SMA)
+        # Calculate Bollinger Bands
         df['SMA_20'] = df['Close'].rolling(window=20).mean()
         # Standard Deviation
         df['STD_20'] = df['Close'].rolling(window=20).std()
@@ -26,14 +24,14 @@ def calculate_technical_signals(ticker):
         df['Upper_Band'] = df['SMA_20'] + (df['STD_20'] * 2)
         df['Lower_Band'] = df['SMA_20'] - (df['STD_20'] * 2)
 
-        # 3. Calculate RSI (Relative Strength Index)
+        # Calculate RSI (Relative Strength Index)
         delta = df['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         df['RSI'] = 100 - (100 / (1 + rs))
 
-        # 4. Generate Signal (The "Brain")
+        # Generate Signal Based on Latest Data
         latest = df.iloc[-1]
         signal = "NEUTRAL"
         confidence = 0
